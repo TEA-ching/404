@@ -1,0 +1,47 @@
+name: Create Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create zip file
+        run: |
+          zip 404-page.zip index.html
+
+      - name: Delete existing release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Delete the existing 'last' release if it exists
+          gh release delete last --yes || true
+          # Delete the tag if it exists
+          git push --delete origin last || true
+
+      - name: Create new release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create last \
+            404-page.zip \
+            --title "Latest Release" \
+            --notes "Automatically generated release containing the 404 page. This release is updated on every push to the main branch. Perfect for deploying to Cloudflare Pages or any static hosting service."
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 404-page
+          path: 404-page.zip
+          retention-days: 90
