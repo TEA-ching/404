@@ -30,75 +30,135 @@
 <head>
     <title>404 - Not Found</title>
     <style>
+        /* 
+         * Body Styling
+         * Sets up a full-screen black background with flexbox centering
+         */
         body {
             background-color: black;
+            /* Black background for the page */
             margin: 0;
+            /* Remove default browser margins */
             height: 100vh;
+            /* 100% of viewport height */
             width: 100vw;
+            /* 100% of viewport width */
             overflow: hidden;
+            /* Hide scrollbars */
             display: flex;
+            /* Use flexbox layout */
             align-items: center;
+            /* Center vertically */
             justify-content: center;
+            /* Center horizontally */
         }
 
+        /* 
+         * SVG 404 Positioning
+         * Centers the SVG and makes it fill the entire viewport
+         * while maintaining aspect ratio
+         */
         #svg404 {
             position: absolute;
+            /* Position relative to viewport */
             top: 50%;
+            /* Start at 50% from top */
             left: 50%;
+            /* Start at 50% from left */
             transform: translate(-50%, -50%);
+            /* Shift back by 50% to center */
             min-width: 100vw;
+            /* Minimum width = viewport width */
             min-height: 100vh;
+            /* Minimum height = viewport height */
             width: auto;
+            /* Auto width for aspect ratio */
             height: auto;
+            /* Auto height for aspect ratio */
         }
 
-        /* GitHub Corner Styles */
+        /* 
+         * GitHub Corner Styles
+         * Creates a clickable GitHub logo in the top-right corner
+         */
         .github-corner {
             position: absolute;
+            /* Position relative to viewport */
             top: 0;
+            /* Align to top edge */
             border: 0;
+            /* Remove border */
             right: 0;
+            /* Align to right edge */
             z-index: 99;
+            /* Ensure it stays on top */
         }
 
+        /* SVG colors for the GitHub corner */
         .github-corner svg {
             fill: #5d5d59;
+            /* Gray fill for background shape */
             color: #fff;
+            /* White color for Octocat */
         }
 
+        /* 
+         * Octocat Arm Animation Setup
+         * Sets the pivot point for the waving animation
+         */
         .github-corner .octo-arm {
             transform-origin: 130px 106px;
+            /* Rotation pivot point (shoulder) */
         }
 
+        /* 
+         * Hover Effect
+         * Makes the Octocat wave when you hover over it
+         */
         .github-corner:hover .octo-arm {
             animation: octocat-wave 560ms ease-in-out;
+            /* Apply wave animation */
         }
 
+        /* 
+         * Wave Animation Keyframes
+         * Defines the waving motion of the Octocat's arm
+         */
         @keyframes octocat-wave {
 
             0%,
             100% {
                 transform: rotate(0);
+                /* Start and end: no rotation */
             }
 
             20%,
             60% {
                 transform: rotate(-25deg);
+                /* Wave down: rotate -25 degrees */
             }
 
             40%,
             80% {
                 transform: rotate(10deg);
+                /* Wave up: rotate +10 degrees */
             }
         }
 
+        /* 
+         * Mobile Optimization
+         * On small screens, animate automatically instead of on hover
+         * (since mobile devices don't have hover states)
+         */
         @media (max-width: 500px) {
             .github-corner:hover .octo-arm {
                 animation: none;
+                /* Disable hover animation */
             }
 
             .github-corner .octo-arm {
                 animation: octocat-wave 560ms ease-in-out;
+                /* Always animate */
             }
         }
     </style>
@@ -261,32 +321,232 @@
         <text x="1050" y="890" font-family="Arial" font-size="18" fill="rgb(128,128,128)">સ્વાહા</text>
     </svg>
     <script>
-        // Get all text elements except "lost"
+        // ============================================================
+        // STEP 1: SELECT AND SEPARATE TEXT ELEMENTS
+        // ============================================================
+
+        // Get the SVG element by its ID
         const svg = document.getElementById('svg404');
+
+        // Get all <text> elements inside the SVG and convert to an array
         const allTexts = Array.from(svg.querySelectorAll('text'));
 
-        // Separate "lost" from other words
+        // Find the main "lost" text element (this one stays in the center)
         const lostElement = allTexts.find(text => text.textContent.trim() === 'lost');
+
+        // Get all other text elements (the translations we want to shuffle)
         const otherTexts = allTexts.filter(text => text.textContent.trim() !== 'lost');
 
-        // Extract the words
+        // Extract just the text content from each element (the words themselves)
         const words = otherTexts.map(text => text.textContent.trim());
 
-        // Shuffle the words (Fisher-Yates algorithm)
+        // ============================================================
+        // STEP 2: SHUFFLE FUNCTION (Fisher-Yates Algorithm)
+        // ============================================================
+
+        /**
+         * Randomly shuffles an array using the Fisher-Yates algorithm
+         * This is a proven method that gives each permutation equal probability
+         * 
+         * How it works:
+         * - Start from the end of the array
+         * - Pick a random element from the remaining unshuffled portion
+         * - Swap it with the current position
+         * - Move to the next position and repeat
+         * 
+         * @param {Array} array - The array to shuffle
+         * @returns {Array} A new shuffled array (original is not modified)
+         */
         function shuffle(array) {
-            const shuffled = [...array];
+            const shuffled = [...array];  // Create a copy using spread operator
+
+            // Loop backwards through the array
             for (let i = shuffled.length - 1; i > 0; i--) {
+                // Pick a random index from 0 to i (inclusive)
                 const j = Math.floor(Math.random() * (i + 1));
+
+                // Swap elements at positions i and j
                 [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
+
             return shuffled;
         }
 
+        // ============================================================
+        // STEP 3: TEXT WIDTH ESTIMATION
+        // ============================================================
+
+        /**
+         * Estimates the width of a text element in pixels
+         * This is needed to detect if two words overlap horizontally
+         * 
+         * Note: We can't measure the exact width without rendering,
+         * so we use an approximation based on character count and font size
+         * 
+         * @param {string} text - The text content
+         * @param {number} fontSize - The font size in pixels
+         * @returns {number} Estimated width in pixels
+         */
+        function estimateTextWidth(text, fontSize) {
+            // Average character width is approximately 0.6 times the font size
+            // This ratio works well for Arial/Helvetica fonts
+            const avgCharWidth = fontSize * 0.6;
+
+            // Total width = number of characters × average character width
+            return text.length * avgCharWidth;
+        }
+
+        // ============================================================
+        // STEP 4: OVERLAP DETECTION
+        // ============================================================
+
+        /**
+         * Checks if two text elements overlap (collide)
+         * 
+         * Two rectangles overlap if they intersect both horizontally AND vertically
+         * We check each axis separately, then combine the results
+         * 
+         * @param {Element} text1 - First text element
+         * @param {Element} text2 - Second text element
+         * @returns {boolean} True if the elements overlap, false otherwise
+         */
+        function checkOverlap(text1, text2) {
+            // Get position and size information for text1
+            const x1 = parseFloat(text1.getAttribute('x'));           // Left edge X coordinate
+            const y1 = parseFloat(text1.getAttribute('y'));           // Baseline Y coordinate
+            const fontSize1 = parseFloat(text1.getAttribute('font-size'));
+            const width1 = estimateTextWidth(text1.textContent, fontSize1);
+
+            // Get position and size information for text2
+            const x2 = parseFloat(text2.getAttribute('x'));
+            const y2 = parseFloat(text2.getAttribute('y'));
+            const fontSize2 = parseFloat(text2.getAttribute('font-size'));
+            const width2 = estimateTextWidth(text2.textContent, fontSize2);
+
+            // Check VERTICAL overlap first (are they on the same line?)
+            // We add a margin equal to half the larger font size
+            const verticalMargin = Math.max(fontSize1, fontSize2) * 0.5;
+
+            // If the Y coordinates are too far apart, they can't overlap
+            if (Math.abs(y1 - y2) > verticalMargin) {
+                return false;  // Not on the same line, so no overlap
+            }
+
+            // Check HORIZONTAL overlap (do they collide left-to-right?)
+            const horizontalMargin = 5; // Small margin between words (5 pixels)
+
+            // Two rectangles DON'T overlap horizontally if:
+            // - text1 ends before text2 starts (x1 + width1 < x2), OR
+            // - text2 ends before text1 starts (x2 + width2 < x1)
+            // We return the OPPOSITE (they DO overlap)
+            return !(x1 + width1 + horizontalMargin < x2 || x2 + width2 + horizontalMargin < x1);
+        }
+
+        // ============================================================
+        // STEP 5: POSITION ADJUSTMENT (COLLISION RESOLUTION)
+        // ============================================================
+
+        /**
+         * Adjusts the position of a text element to avoid overlapping with others
+         * 
+         * Strategy:
+         * 1. Check if this element overlaps with any other element
+         * 2. If it does, move it away on either the X or Y axis
+         * 3. Choose the axis where there's less overlap (easier to fix)
+         * 4. Repeat up to maxAttempts times
+         * 
+         * @param {Element} textElement - The text element to adjust
+         * @param {Array} otherElements - All other text elements to check against
+         * @param {number} maxAttempts - Maximum number of adjustment attempts (default: 10)
+         */
+        function adjustPosition(textElement, otherElements, maxAttempts = 10) {
+            let attempts = 0;           // Counter for adjustment attempts
+            let hasOverlap = true;      // Flag to track if overlaps still exist
+
+            // Keep trying to fix overlaps until we succeed or run out of attempts
+            while (hasOverlap && attempts < maxAttempts) {
+                hasOverlap = false;  // Assume no overlap (will be set to true if found)
+
+                // Check against each other element
+                for (const other of otherElements) {
+                    // Skip comparing the element to itself
+                    if (other === textElement) continue;
+
+                    // Check if there's an overlap
+                    if (checkOverlap(textElement, other)) {
+                        hasOverlap = true;  // Found an overlap!
+
+                        // Get current position and size information
+                        const currentX = parseFloat(textElement.getAttribute('x'));
+                        const currentY = parseFloat(textElement.getAttribute('y'));
+                        const fontSize = parseFloat(textElement.getAttribute('font-size'));
+                        const width = estimateTextWidth(textElement.textContent, fontSize);
+                        const otherX = parseFloat(other.getAttribute('x'));
+                        const otherY = parseFloat(other.getAttribute('y'));
+
+                        // Calculate how much overlap there is on each axis
+                        const deltaX = Math.abs(currentX - otherX);  // Horizontal distance
+                        const deltaY = Math.abs(currentY - otherY);  // Vertical distance
+
+                        // DECISION: Move on the axis with LESS overlap (easier to resolve)
+                        if (deltaX < deltaY) {
+                            // ===== MOVE HORIZONTALLY =====
+                            if (currentX < otherX) {
+                                // Current element is to the left, so move it further left
+                                const newX = Math.max(10, currentX - width * 0.3);
+                                textElement.setAttribute('x', newX);
+                            } else {
+                                // Current element is to the right, so move it further right
+                                // Make sure we don't go beyond the right edge (1920 - width)
+                                const newX = Math.min(1910 - width, currentX + width * 0.3);
+                                textElement.setAttribute('x', newX);
+                            }
+                        } else {
+                            // ===== MOVE VERTICALLY =====
+                            if (currentY < otherY) {
+                                // Current element is above, so move it further up
+                                // Make sure we don't go above the top edge
+                                const newY = Math.max(fontSize + 10, currentY - fontSize * 0.5);
+                                textElement.setAttribute('y', newY);
+                            } else {
+                                // Current element is below, so move it further down
+                                // Make sure we don't go below the bottom edge (1080)
+                                const newY = Math.min(1070, currentY + fontSize * 0.5);
+                                textElement.setAttribute('y', newY);
+                            }
+                        }
+
+                        // We found and fixed an overlap, so exit the inner loop
+                        // and start checking all elements again from the beginning
+                        break;
+                    }
+                }
+
+                attempts++;  // Increment attempt counter
+            }
+        }
+
+        // ============================================================
+        // STEP 6: EXECUTE THE SHUFFLE AND FIX OVERLAPS
+        // ============================================================
+
+        // Shuffle all the words (creates a new random arrangement)
         const shuffledWords = shuffle(words);
 
-        // Reassign the shuffled words to the elements
+        // Assign the shuffled words back to the text elements
+        // This changes what each <text> element displays
         otherTexts.forEach((text, index) => {
             text.textContent = shuffledWords[index];
+        });
+
+        // Detect and fix any overlaps that were created by the shuffle
+        // We process each text element one by one
+        otherTexts.forEach((text, index) => {
+            // Get all OTHER elements (excluding the current one)
+            const otherElements = otherTexts.filter((_, i) => i !== index);
+
+            // Try to adjust this element's position to avoid overlaps
+            adjustPosition(text, otherElements);
         });
     </script>
 </body>
