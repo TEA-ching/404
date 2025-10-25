@@ -93,12 +93,19 @@ jobs:
             --title "Latest Release" \
             --notes "Automatically generated release containing the 404 page. This release is updated on every push to the main branch. Perfect for deploying to Cloudflare Pages or any static hosting service."
 
-      - name: Upload artifact
+      - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
           name: 404-page
           path: 404-page.zip
           retention-days: 90
+
+      - name: Upload minified files artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-files
+          path: dist/
+          retention-days: 1
 
   deploy-pages:
     runs-on: ubuntu-latest
@@ -109,8 +116,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Download minified files
+        uses: actions/download-artifact@v4
+        with:
+          name: pages-files
+          path: pages-build-dir
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -118,7 +128,7 @@ jobs:
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'dist'
+          path: 'pages-build-dir'
 
       - name: Deploy to GitHub Pages
         id: deployment
