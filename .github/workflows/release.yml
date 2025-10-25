@@ -42,9 +42,38 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install minification tools
+        run: |
+          npm install -g terser html-minifier
+
+      - name: Minify HTML and inline JavaScript
+        run: |
+          # Create a temporary directory for minified files
+          mkdir -p dist
+          
+          # Minify HTML with inline JavaScript and CSS
+          html-minifier \
+            --collapse-whitespace \
+            --remove-comments \
+            --minify-css \
+            --minify-js \
+            --remove-optional-tags \
+            --remove-redundant-attributes \
+            --remove-script-type-attributes \
+            --remove-style-link-type-attributes \
+            --use-short-doctype \
+            index.html > dist/index.html
+
       - name: Create zip file
         run: |
-          zip 404-page.zip index.html
+          cd dist
+          zip ../404-page.zip index.html
+          cd ..
 
       - name: Delete existing release
         env:
@@ -89,7 +118,7 @@ jobs:
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: 'dist'
 
       - name: Deploy to GitHub Pages
         id: deployment
