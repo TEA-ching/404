@@ -19,6 +19,7 @@ A creative 404 error page featuring the word "lost" translated into 130+ languag
 - **Languages**: 130+ unique translations from various language families
 - **Font**: Arial/Helvetica sans-serif
 - **Colors**: White for "lost", various shades of gray for translations
+<img width="1912" height="1024" alt="image" src="https://github.com/user-attachments/assets/323bb5b0-41c0-4913-811f-16fe39832f54" />
 
 ## Usage
 
